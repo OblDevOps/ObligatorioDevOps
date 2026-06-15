@@ -1,0 +1,8 @@
+# Terraform
+**/.terraform/*
+.terraform
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+# Note: do NOT ignore .terraform.lock.hcl — that one you DO want committed

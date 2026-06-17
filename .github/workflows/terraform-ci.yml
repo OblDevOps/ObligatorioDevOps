@@ -1,0 +1,137 @@
+name: Terraform CI
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "environments/**"
+      - "modules/**"
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "environments/**"
+      - "modules/**"
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Ambiente a operar"
+        required: true
+        default: "dev"
+        type: choice
+        options:
+          - dev
+          # - test    <- descomentar cuando exista environments/test
+          # - prod    <- descomentar cuando exista environments/prod
+      action:
+        description: "Qué hacer en el ambiente elegido"
+        required: true
+        default: "plan"
+        type: choice
+        options:
+          - plan
+          - apply
+
+permissions:
+  contents: read
+  pull-requests: write
+
+env:
+  TF_IN_AUTOMATION: true
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+  AWS_REGION: us-east-1
+
+jobs:
+  # ── Job 1: validación (corre siempre, en push, PR y disparo manual) ──
+  validate:
+    name: Validate & Plan
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: environments/${{ github.event.inputs.environment || 'dev' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Format Check
+        run: terraform fmt -check -recursive
+        continue-on-error: true
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan -var-file="terraform.tfvars" -no-color
+        continue-on-error: true
+
+      - name: Comment plan on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const env = "${{ github.event.inputs.environment || 'dev' }}";
+            const output = `### Terraform Plan — \`${env}\`
+            \`\`\`
+            ${{ steps.plan.outputs.stdout }}
+            \`\`\`
+            *Autor: @${{ github.actor }}*`;
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            });
+
+      - name: Fail if plan failed
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
+
+  # ── Job 2: apply MANUAL (solo cuando lo disparás a mano y elegís "apply") ──
+  apply:
+    name: Apply (manual)
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'apply'
+    needs: validate
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: environments/${{ github.event.inputs.environment }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Apply
+        run: terraform apply -var-file="terraform.tfvars" -auto-approve
+
+  # ─────────────────────────────────────────────────────────────────
+  # SEMANA 5 — promoción entre ambientes (descomentar al tener test/prod):
+  #
+  # apply-auto-dev:
+  #   name: Apply automático (dev/test)
+  #   if: github.event_name == 'push'
+  #   needs: validate
+  #   runs-on: ubuntu-latest
+  #   ... (apply directo a dev/test al mergear a main)
+  #
+  # apply-prod:
+  #   name: Apply prod (con aprobación)
+  #   if: github.event_name == 'workflow_dispatch' && inputs.environment == 'prod'
+  #   needs: validate
+  #   environment: prod   # <- este "environment" con required reviewers
+  #                       #    es lo que frena y pide aprobación manual
+  #   runs-on: ubuntu-latest
+  #   ...
+  # ─────────────────────────────────────────────────────────────────

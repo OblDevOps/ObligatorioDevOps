@@ -13,3 +13,9 @@ module "ecr" {
   repository_names = var.repository_names
   environment      = var.environment
 }
+
+module "ecs" {
+  source       = "../../modules/ecs"
+  cluster_name = var.cluster_name
+  environment  = var.environment
+}

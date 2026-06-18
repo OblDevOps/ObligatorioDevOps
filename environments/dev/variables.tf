@@ -32,3 +32,8 @@ variable "repository_names" {
   description = "Microservicios que tendrán repositorio ECR"
   type        = list(string)
 }
+
+variable "cluster_name" {
+  description = "Nombre del cluster ECS"
+  type        = string
+}

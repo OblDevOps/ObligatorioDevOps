@@ -101,3 +101,42 @@ resource "aws_lb_listener" "main" {
     target_group_arn = aws_lb_target_group.main.arn
   }
 }
+
+# Log Group de CloudWatch. aca es donde van los logs del contenedor
+resource "aws_cloudwatch_log_group" "main" {
+  name              = "/ecs/${var.service_name}"
+  retention_in_days = 7
+
+  tags = {
+    Name        = "/ecs/${var.service_name}"
+    Environment = var.environment
+  }
+}
+
+# ECS Service. mantiene N tareas corriendo y las conecta al ALB
+resource "aws_ecs_service" "main" {
+  name            = var.service_name
+  cluster         = var.cluster_id
+  task_definition = aws_ecs_task_definition.main.arn
+  desired_count   = var.desired_count
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    subnets          = var.private_subnet_ids
+    security_groups  = [aws_security_group.task.id]
+    assign_public_ip = false
+  }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.main.arn
+    container_name   = var.service_name
+    container_port   = var.container_port
+  }
+
+  depends_on = [aws_lb_listener.main]
+
+  tags = {
+    Name        = var.service_name
+    Environment = var.environment
+  }
+}

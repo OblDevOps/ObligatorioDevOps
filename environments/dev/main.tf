@@ -43,10 +43,11 @@ module "service_ui" {
   container_image = "${module.ecr.repository_urls["ui"]}:latest"
 
   # configuración del contenedor
-  container_port = 8080
-  cpu            = 256
-  memory         = 512
-  desired_count  = 1
+  container_port    = 8080
+  cpu               = 256
+  memory            = 512
+  desired_count     = 1
+  health_check_path = "/health"
 
   # precisamos el rol de ejecución (LabRole en el Learner Lab)
   execution_role_arn = data.aws_iam_role.labrole.arn

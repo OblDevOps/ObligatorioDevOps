@@ -38,7 +38,3 @@ variable "cluster_name" {
   type        = string
 }
 
-variable "execution_role_arn" {
-  description = "ARN del LabRole para ejecución de tareas ECS"
-  type        = string
-}

@@ -1,3 +1,7 @@
+data "aws_iam_role" "labrole" {
+  name = "LabRole"
+}
+
 module "network" {
   source             = "../../modules/networking"
   vpc_cidr           = var.vpc_cidr
@@ -45,5 +49,5 @@ module "service_ui" {
   desired_count  = 1
 
   # precisamos el rol de ejecución (LabRole en el Learner Lab)
-  execution_role_arn = var.execution_role_arn
+  execution_role_arn = data.aws_iam_role.labrole.arn
 }

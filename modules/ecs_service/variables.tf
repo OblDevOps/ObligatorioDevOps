@@ -57,11 +57,6 @@ variable "desired_count" {
   default     = 1
 }
 
-variable "execution_role_arn" {
-  description = "ARN del rol de ejecución de la tarea (LabRole en el Learner Lab)"
-  type        = string
-}
-
 variable "health_check_path" {
   description = "Ruta para el health check del ALB"
   type        = string
@@ -72,4 +67,9 @@ variable "aws_region" {
   description = "Región de AWS"
   type        = string
   default     = "us-east-1"
+}
+
+variable "execution_role_arn" {
+  description = "ARN del LabRole para ejecución de tareas ECS"
+  type        = string
 }

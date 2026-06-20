@@ -54,13 +54,30 @@ module "service_ui" {
   execution_role_arn = data.aws_iam_role.labrole.arn
 }
 
-# catalog como servicio interno, utiliza alb interno tmb
+
+# Base de datos PostgreSQL compartida (atras de nlb interno)
+module "database" {
+  source = "../../modules/database"
+
+  environment        = var.environment
+  vpc_id             = module.network.vpc_id
+  vpc_cidr           = var.vpc_cidr
+  private_subnet_ids = module.network.private_subnet_ids
+  cluster_id         = module.ecs.cluster_id
+
+  container_image    = "${module.ecr.repository_urls["db"]}:latest"
+  execution_role_arn = data.aws_iam_role.labrole.arn
+
+  db_password = var.db_password
+}
+
+# Servicio interno. catalog (ALB interno conectado a Postgres)
 module "service_catalog" {
   source = "../../modules/ecs_service"
 
   service_name = "catalog"
   environment  = var.environment
-  internal     = true # alb interno
+  internal     = true
 
   vpc_id             = module.network.vpc_id
   vpc_cidr           = var.vpc_cidr
@@ -77,6 +94,16 @@ module "service_catalog" {
   memory            = 512
   desired_count     = 1
   health_check_path = "/health"
+
+  # Conexión a la base de datos (vía el NLB)
+  environment_variables = [
+    { name = "GIN_MODE", value = "release" },
+    { name = "RETAIL_CATALOG_PERSISTENCE_PROVIDER", value = "postgres" },
+    { name = "RETAIL_CATALOG_PERSISTENCE_ENDPOINT", value = "${module.database.db_endpoint}:5432" },
+    { name = "RETAIL_CATALOG_PERSISTENCE_DB_NAME", value = "catalogdb" },
+    { name = "RETAIL_CATALOG_PERSISTENCE_USER", value = "retail_user" },
+    { name = "RETAIL_CATALOG_PERSISTENCE_PASSWORD", value = var.db_password }
+  ]
 
   execution_role_arn = data.aws_iam_role.labrole.arn
 }

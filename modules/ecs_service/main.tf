@@ -9,7 +9,7 @@ resource "aws_security_group" "alb" {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = var.internal ? [var.vpc_cidr] : ["0.0.0.0/0"]
   }
 
   egress {
@@ -93,10 +93,10 @@ resource "aws_ecs_task_definition" "main" {
 # Application Load Balancer. recibe el tráfico de internet y lo reparte entre las tareas
 resource "aws_lb" "main" {
   name               = "${var.service_name}-alb"
-  internal           = false
+  internal           = var.internal
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb.id]
-  subnets            = var.public_subnet_ids
+  subnets            = var.internal ? var.public_subnet_ids : var.public_subnet_ids # dependiendo de interno o publico
 
   tags = {
     Name        = "${var.service_name}-alb"
@@ -203,3 +203,4 @@ resource "aws_appautoscaling_policy" "cpu" {
     target_value = var.cpu_target
   }
 }
+

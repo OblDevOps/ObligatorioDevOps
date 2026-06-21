@@ -53,3 +53,30 @@ module "service_ui" {
   # precisamos el rol de ejecución (LabRole en el Learner Lab)
   execution_role_arn = data.aws_iam_role.labrole.arn
 }
+
+# catalog como servicio interno, utiliza alb interno tmb
+module "service_catalog" {
+  source = "../../modules/ecs_service"
+
+  service_name = "catalog"
+  environment  = var.environment
+  internal     = true # alb interno
+
+  vpc_id             = module.network.vpc_id
+  vpc_cidr           = var.vpc_cidr
+  public_subnet_ids  = module.network.public_subnet_ids
+  private_subnet_ids = module.network.private_subnet_ids
+
+  cluster_id   = module.ecs.cluster_id
+  cluster_name = module.ecs.cluster_name
+
+  container_image = "${module.ecr.repository_urls["catalog"]}:latest"
+
+  container_port    = 8080
+  cpu               = 256
+  memory            = 512
+  desired_count     = 1
+  health_check_path = "/health"
+
+  execution_role_arn = data.aws_iam_role.labrole.arn
+}

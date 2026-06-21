@@ -96,3 +96,15 @@ variable "cluster_name" {
   description = "Nombre del cluster ECS"
   type        = string
 }
+
+variable "internal" {
+  description = "Si el ALB es interno (solo VPC) o público (internet)"
+  type        = bool
+  default     = false
+}
+
+variable "vpc_cidr" {
+  description = "CIDR de la VPC, para el ALB interno"
+  type        = string
+  default     = ""
+}

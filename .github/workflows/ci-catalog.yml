@@ -81,17 +81,6 @@ jobs:
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Generate simulated Postman collection
-        run: node scripts/PostmanTest.js
-        env:
-          NODE_ENV: test
-          POSTMAN_SERVICES: catalog
-
       - name: Set up Go
         uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
         with:
@@ -129,7 +118,7 @@ jobs:
 
       - name: Run Newman tests locally
         run: |
-          newman run postman/newman/retail-store.postman_collection.json \
+          newman run tests/postman/catalog.postman_collection.json \
             --reporters cli,htmlextra \
             --reporter-htmlextra-export tests/postman/reports/catalog-report.html \
             --bail

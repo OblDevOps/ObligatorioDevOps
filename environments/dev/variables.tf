@@ -38,3 +38,8 @@ variable "cluster_name" {
   type        = string
 }
 
+variable "db_password" {
+  description = "Password de la base de datos"
+  type        = string
+  sensitive   = true
+}

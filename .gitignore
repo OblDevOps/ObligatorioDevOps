@@ -6,4 +6,4 @@
 crash.log
 crash.*.log
 node_modules/
-# Note: do NOT ignore .terraform.lock.hcl — that one you DO want committed
+**/secrets.auto.tfvars

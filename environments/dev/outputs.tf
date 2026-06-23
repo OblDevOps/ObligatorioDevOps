@@ -18,3 +18,8 @@ output "ui_alb_dns" {
   description = "URL pública del servicio ui"
   value       = module.service_ui.alb_dns_name
 }
+
+output "api_gateway_ui_url" {
+  description = "URL pública de API Gateway delante de la UI con throttling"
+  value       = module.api_gateway.invoke_url
+}

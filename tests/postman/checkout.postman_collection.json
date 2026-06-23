@@ -127,7 +127,7 @@
           "listen": "test",
           "script": {
             "exec": [
-              "pm.test('Status is 200', function () {",
+              "pm.test('Status is 201', function () {",
               "  pm.response.to.have.status(200);",
               "});",
               "pm.test('Submitted checkout has orderId and email', function () {",

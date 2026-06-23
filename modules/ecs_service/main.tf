@@ -67,6 +67,7 @@ resource "aws_ecs_task_definition" "main" {
       essential = true
 
       environment = var.environment_variables
+      secrets     = var.secret_arns
 
       portMappings = [
         {
@@ -98,7 +99,7 @@ resource "aws_lb" "main" {
   internal           = var.internal
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb.id]
-  subnets            = var.internal ? var.public_subnet_ids : var.public_subnet_ids # dependiendo de interno o publico
+  subnets            = var.internal ? var.private_subnet_ids : var.public_subnet_ids # dependiendo de interno o publico
 
   tags = {
     Name        = "${var.service_name}-alb"
@@ -189,7 +190,7 @@ resource "aws_appautoscaling_target" "ecs" {
   scalable_dimension = "ecs:service:DesiredCount"
   service_namespace  = "ecs"
 
-  depends_on = [aws_ecs_service.main]
+  depends_on = [aws_ecs_service.main] #no crea auto scalling hasta que ecs no exista
 }
 
 # auto scaling policy.escala según el uso de CPU

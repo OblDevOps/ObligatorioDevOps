@@ -8,7 +8,7 @@ terraform {
   }
 
   backend "s3" {
-    bucket  = "retailstore-tfstate"
+    bucket  = "retailstore-bucket-devops"
     key     = "test/terraform.tfstate"
     region  = "us-east-1"
     encrypt = true

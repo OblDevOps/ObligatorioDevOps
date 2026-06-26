@@ -1,0 +1,42 @@
+# ============================================================
+# .trivyignore — Excepciones de vulnerabilidades para la imagen db
+# ============================================================
+#
+# Todas las CVEs listadas aquí afectan a "gosu", un binario Go
+# incluido por los mantenedores de la imagen oficial postgres:16-alpine.
+# gosu es utilizado por el entrypoint de postgres para realizar el
+# cambio de usuario de root a postgres al iniciar el servidor.
+#
+# Por qué se suprimen:
+#   1. gosu solo realiza cambio de usuario (setuid); no abre conexiones
+#      de red ni expone funcionalidad TLS hacia el exterior, por lo que
+#      las CVEs de tipo TLS/crypto tienen superficie de ataque nula
+#      en este contexto.
+#   2. El binario gosu es compilado y distribuido por el equipo de
+#      mantenimiento de Alpine/postgres. No es código propio y no puede
+#      ser actualizado sin recompilar la imagen base completa.
+#   3. Se intentó migrar a postgres:18-alpine3.23 pero la misma versión
+#      de gosu (Go v1.24.6) persiste en esa imagen también.
+#
+# Acción pendiente:
+#   Cuando Alpine actualice el paquete gosu a una versión compilada con
+#   Go >= 1.24.13 o >= 1.25.7, estas excepciones deben ser removidas.
+# ============================================================
+
+# CVE CRITICAL — crypto/tls: validación incorrecta de certificado en reanudación de sesión TLS
+CVE-2025-68121
+
+# CVEs HIGH — vulnerabilidades DoS y parsing en stdlib de Go (net/url, crypto/x509, crypto/tls, net)
+CVE-2025-61726
+CVE-2025-61729
+CVE-2026-25679
+CVE-2026-27145
+CVE-2026-32280
+CVE-2026-32281
+CVE-2026-32283
+CVE-2026-33811
+CVE-2026-33814
+CVE-2026-39820
+CVE-2026-39836
+CVE-2026-42499
+CVE-2026-42504

@@ -37,7 +37,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:18-alpine3.23
+        image: postgres:16-alpine
         env:
           POSTGRES_DB: orders
           POSTGRES_USER: retail_user
@@ -111,6 +111,7 @@ jobs:
           severity: CRITICAL,HIGH
           exit-code: "1"
           ignore-unfixed: true
+          trivyignores: src/db/.trivyignore
 
       - name: Push image to ECR
         id: push

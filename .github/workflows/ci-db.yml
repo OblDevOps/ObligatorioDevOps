@@ -31,3 +31,36 @@ jobs:
           base: ${{ github.event.before }}
           head: ${{ github.event.after }}
           extra_args: --only-verified
+
+  validate-sql:
+    name: Validate SQL
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: orders
+          POSTGRES_USER: retail_user
+          POSTGRES_PASSWORD: testpassword
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Run init SQL
+        env:
+          PGPASSWORD: testpassword
+        run: |
+          psql -h localhost -U retail_user -d orders -f src/db/init-db.sql
+
+      - name: Verify databases and schema
+        env:
+          PGPASSWORD: testpassword
+        run: |
+          psql -h localhost -U retail_user -d catalogdb -c "SELECT 1"
+          psql -h localhost -U retail_user -d cartdb -c "SELECT COUNT(*) FROM cart_items"

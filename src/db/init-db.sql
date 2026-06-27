@@ -1,5 +1,6 @@
 -- The 'orders' database is created by POSTGRES_DB env var
 -- This script creates catalogdb, cartdb and grants permissions
+-- Comentario para testear
 
 CREATE DATABASE catalogdb;
 CREATE DATABASE cartdb;

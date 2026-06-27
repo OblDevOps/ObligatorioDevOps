@@ -1,5 +1,5 @@
 locals {
-  services     = ["ui", "catalog", "orders", "cart", "checkout", "admin"]
+  services     = ["ui", "catalog", "orders", "cart", "checkout", "admin", "postgres", "redis"]
   cluster_name = module.ecs.cluster_name
 }
 

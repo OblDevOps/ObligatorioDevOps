@@ -189,9 +189,16 @@ Cart es un microservicio Python/FastAPI que se inicia directamente con `uvicorn`
 
 El proyecto checkout usa Yarn 4 (Berry) con Plug'n'Play. En lugar de invocar el comando global `yarn`, el pipeline llama directamente al binario del repositorio: `node .yarn/releases/yarn-4.11.0.cjs`. Esto garantiza que se usa exactamente la versión de Yarn definida en el proyecto, independientemente de lo instalado en el runner.
 
-**Excepción Trivy (imagen)**
+**Excepción Trivy (imagen): `src/checkout/.trivyignore`**
 
-El pipeline referencia `src/checkout/.trivyignore` para suprimir vulnerabilidades conocidas en dependencias de terceros de la imagen base.
+Trivy detectó `CVE-2026-12151` (HIGH) en `undici`, una librería HTTP bundleada dentro del binario de `npm` que viene incluido en la imagen base de Node.js (`/usr/local/lib/node_modules/npm`). La vulnerabilidad es un DoS a través de WebSockets.
+
+Se decidió suprimir esta CVE porque:
+- El `npm` interno de la imagen nunca se ejecuta en producción; el contenedor arranca directamente con `node dist/main.js`
+- Al no ejecutarse `npm`, el código vulnerable de `undici` nunca es alcanzable
+- El fix existe en `undici` 6.27.0 pero aún no está incluido en ninguna release de Node.js
+
+El archivo debe ser removido cuando Node.js publique una versión que incluya `undici` ≥ 6.27.0.
 
 ---
 
@@ -201,9 +208,9 @@ El pipeline referencia `src/checkout/.trivyignore` para suprimir vulnerabilidade
 
 El microservicio UI puede arrancar y responder al health check sin conectarse a ningún backend, lo que simplifica los tests de integración al no requerir servicios adicionales.
 
-**Excepción Trivy (imagen)**
+**Excepción Trivy (imagen): `src/ui/.trivyignore`**
 
-El pipeline referencia `src/ui/.trivyignore` para suprimir vulnerabilidades en la imagen base.
+Trivy detectó `CVE-2026-12151` (HIGH) en `undici`, bundleado dentro de `npm` en la imagen base de Node.js. La misma situación que checkout y admin: el `npm` interno nunca se ejecuta en producción (el contenedor arranca con `node dist/app.js`), por lo que el código vulnerable no es alcanzable. El archivo debe removerse cuando Node.js incluya `undici` ≥ 6.27.0.
 
 ---
 
@@ -234,9 +241,9 @@ La colección de Newman usa `{{adminPassword}}` en el body del request de login,
 
 Las credenciales del admin en ECS provienen de AWS Secrets Manager, cuyo valor es gestionado por Terraform vía el GitHub Secret `ADMIN_PASSWORD`. Si el secret se actualiza, es necesario: (1) re-aplicar Terraform para actualizar Secrets Manager, y (2) forzar un nuevo deployment de ECS para que los contenedores lean el nuevo valor. Actualizar solo el GitHub Secret no es suficiente.
 
-**Excepción Trivy (imagen)**
+**Excepción Trivy (imagen): `src/admin/.trivyignore`**
 
-El pipeline referencia `src/admin/.trivyignore` para suprimir vulnerabilidades en dependencias de la imagen.
+Trivy detectó `CVE-2026-12151` (HIGH) en `undici`, bundleado dentro de `npm` en la imagen base de Node.js. La misma situación que checkout y ui: el `npm` interno nunca se ejecuta en producción (el contenedor arranca con `node dist/app.js`), por lo que el código vulnerable no es alcanzable. El archivo debe removerse cuando Node.js incluya `undici` ≥ 6.27.0.
 
 ---
 

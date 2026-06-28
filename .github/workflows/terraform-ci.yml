@@ -60,6 +60,20 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
+      - name: tfsec
+        uses: aquasecurity/tfsec-action@v1.0.3
+        with:
+          working_directory: environments/${{ github.event.inputs.environment || 'dev' }}
+          soft_fail: true
+
+      - name: Detect secrets (TruffleHog)
+        uses: trufflesecurity/trufflehog@9b6b5326bfe25dbd856eccc8a8275eb5dea7bd52 # main
+        with:
+          path: ./
+          base: ${{ github.event.before }}
+          head: ${{ github.event.after }}
+          extra_args: --only-verified
+
       - name: Terraform Format Check
         run: terraform fmt -check -recursive
         continue-on-error: true

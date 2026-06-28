@@ -13,9 +13,116 @@
 
 ## Pre-requisitos
 
+### Ejecución local
+
+- [Docker](https://docs.docker.com/get-docker/) 24+
+- [Docker Compose](https://docs.docker.com/compose/install/) v2.20+
+
+### Despliegue en AWS
+
+- [Terraform](https://developer.hashicorp.com/terraform/install) >= 1.5 con provider `hashicorp/aws ~> 5.0`
+- [AWS CLI](https://aws.amazon.com/cli/) configurado con credenciales activas
+- Sesión de AWS Academy Learner Lab activa (las credenciales expiran cada 4 horas)
+- Acceso de escritura al repositorio de GitHub para configurar Secrets y aprobar deploys de producción
+
+---
+
 ### Variables de entorno
 
+#### Ejecución local
+
+El archivo `docker-compose.yml` define valores por defecto para todas las variables. No se requiere configuración adicional para levantar el entorno local.
+
+| Variable | Servicio | Default local |
+| -------- | -------- | ------------- |
+| `RETAIL_UI_ENDPOINTS_*` | ui | URLs internas de Docker Compose |
+| `CART_POSTGRES_*` / `RETAIL_CATALOG_PERSISTENCE_*` | cart, catalog, orders | `db:5432` |
+| `RETAIL_CHECKOUT_PERSISTENCE_REDIS_URL` | checkout | `redis://redis:6379` |
+| `ADMIN_USERNAME` / `ADMIN_PASSWORD` | admin | `admin` / `admin` |
+| `ADMIN_JWT_SECRET` | admin | `change-me-in-production` |
+
+#### Despliegue en AWS — GitHub Secrets requeridos
+
+Deben configurarse en **Settings → Secrets and variables → Actions** del repositorio antes de ejecutar cualquier pipeline.
+
+| Secret | Usado por | Descripción |
+| ------ | --------- | ----------- |
+| `AWS_ACCESS_KEY_ID` | Terraform CI + CI de microservicios | Credencial de AWS Academy |
+| `AWS_SECRET_ACCESS_KEY` | Terraform CI + CI de microservicios | Credencial de AWS Academy |
+| `AWS_SESSION_TOKEN` | Terraform CI + CI de microservicios | Token de sesión temporal del Learner Lab |
+| `DB_PASSWORD` | Terraform CI | Contraseña de PostgreSQL; se almacena en Secrets Manager |
+| `ADMIN_PASSWORD` | Terraform CI | Contraseña del panel admin; se almacena en Secrets Manager |
+| `ADMIN_JWT_SECRET` | Terraform CI | Secreto JWT del admin; se almacena en Secrets Manager |
+| `SONAR_TOKEN` | CI de cada microservicio | Token de SonarCloud para análisis de calidad |
+| `SEMGREP_APP_TOKEN` | CI de cada microservicio | Token de Semgrep para análisis SAST |
+
+---
+
 ### Instrucciones de despliegue
+
+#### Ejecución local
+
+```bash
+# Levantar todos los servicios
+docker compose up --build
+
+# Detener
+docker compose down
+
+# Resetear base de datos
+docker compose down -v
+```
+
+| Servicio | URL |
+| -------- | --- |
+| Tienda | http://localhost:8080 |
+| Admin | http://localhost:8081 |
+
+#### Despliegue en AWS (primera vez)
+
+El primer despliegue requiere crear la infraestructura y subir las imágenes iniciales a ECR antes de que el CI/CD pueda operar.
+
+**1. Configurar los GitHub Secrets** listados en la sección anterior.
+
+**2. Desplegar la infraestructura** ejecutando el pipeline de Terraform desde GitHub Actions (Actions → Terraform CI → Run workflow, seleccionar environment y action `apply`), o de forma local:
+
+Antes de aplicar, crear el archivo `secrets.auto.tfvars` en el directorio del ambiente (está en `.gitignore`, no se commitea):
+
+```hcl
+# environments/dev/secrets.auto.tfvars
+db_password      = "tu-password"
+admin_password   = "tu-password-admin"
+admin_jwt_secret = "tu-secreto-jwt"
+```
+
+```bash
+cd environments/dev
+terraform init
+terraform apply
+```
+
+Repetir para `environments/test` y `environments/prod`.
+
+**3. (Opcional) Subir imágenes manualmente a ECR** — solo necesario si se quiere hacer el bootstrap sin esperar al CI/CD, por ejemplo para validar la infraestructura antes de que exista algún pipeline ejecutado. Requiere Docker y AWS CLI configurados localmente:
+
+```bash
+bash scripts/push-images.sh
+```
+
+En condiciones normales este paso no es necesario: el primer push a `main` dispara el CI de cada microservicio, que construye y sube las imágenes automáticamente.
+
+#### Flujo normal (CI/CD)
+
+Una vez bootstrapeado el entorno, todo deploy se gestiona automáticamente al hacer push a `main`:
+
+```
+push a main
+  └─► deploy automático → dev
+        └─► deploy automático → test
+              └─► aprobación manual en GitHub Actions → prod
+```
+
+Este flujo aplica tanto a cambios en la infraestructura (Terraform CI) como a cambios en el código de cada microservicio (CI individual por servicio).
 
 ---
 
@@ -106,6 +213,7 @@ Los ambientes se gestionan íntegramente mediante **pipelines**. Todo merge a `m
 
 ---
 
+### Arquitectura
 ### Pipelines de CI/CD
 
 #### Estructura general
@@ -398,11 +506,7 @@ Implementamos HTTP API Gateway exclusivamente frente al servicio UI para aplicar
 
 ### Gestión del proyecto
 
-Para la gestión de tareas y la organización del equipo, se implementó un tablero Kanban mediante la herramienta Trello. Este tablero se mantuvo actualizado de forma continua durante todo el ciclo de vida del proyecto, funcionando como un eje central para la visualización del flujo de trabajo. Las tareas se categorizaron dinámicamente en tres estados principales: Lista de tareas (To Do), En proceso (In Progress) y Hecho (Done), permitiendo un seguimiento en tiempo real del avance de cada requerimiento. Se seleccionó esta herramienta debido a su flexibilidad, lo cual facilitó la adaptación de la metodología a las necesidades específicas del equipo y permitió gestionar el cambio de manera ágil a través de la adición, modificación o eliminación de tareas a medida que el proyecto evolucionaba.
-
 #### Tablero Kanban
-
-Capturas de pantalla en distintas etapas mostrando la evolución del tablero Kanban utilizado a lo largo del desarrollo del proyecto.
 
 ##### Inicio
 
@@ -410,7 +514,7 @@ Capturas de pantalla en distintas etapas mostrando la evolución del tablero Kan
 
 ##### Mitad
 
-![Kanban mitad](./img/tablero-mitad.png)
+_Pendiente_
 
 ##### Cierre
 

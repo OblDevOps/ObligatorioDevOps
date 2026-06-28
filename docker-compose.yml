@@ -8,7 +8,7 @@ services:
       POSTGRES_DB: orders
     volumes:
       - db-data:/var/lib/postgresql/data
-      - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./src/db/init-db.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5432:5432"
     healthcheck:

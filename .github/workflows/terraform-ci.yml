@@ -125,7 +125,7 @@ jobs:
 
   #apply manual. dispara al elegir la opción apply
   apply:
-    name: Apply (manual)
+    name: Apply (manual) — ${{ github.event.inputs.environment }}
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'apply'
     needs: validate
     runs-on: ubuntu-latest

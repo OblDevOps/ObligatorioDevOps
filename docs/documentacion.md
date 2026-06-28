@@ -90,8 +90,8 @@ Antes de aplicar, crear el archivo `secrets.auto.tfvars` en el directorio del am
 
 ```hcl
 # environments/dev/secrets.auto.tfvars
-db_password      = "tu-password"
-admin_password   = "tu-password-admin"
+db_password      = "retailpassword"
+admin_password   = "admin"
 admin_jwt_secret = "tu-secreto-jwt"
 ```
 

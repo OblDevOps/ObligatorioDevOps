@@ -88,7 +88,7 @@ Cada rama de vida corta se deriva de main, se integra mediante un Pull Request y
 
 Decidimos implementar **GitHub Flow** basándonos en nuestra experiencia previa con GitFlow en el proyecto integrador. Si bien esa metodología resultó muy útil en su momento, su estructura con múltiples ramas permanentes genera una sobrecarga innecesaria para un desarrollo de corta duración y sin continuidad a largo plazo.
 
-Por este motivo, optamos por GitHub Flow: un enfoque que mantiene una **única rama permanente (`main`) siempre en estado desplegable**, de la cual se derivan ramas de vida corta para cada feature o bugfix que se integran mediante Pull Requests. Esto reduce los pasos intermedios y elimina la necesidad de mantener una rama de integración (`develop`), conservando igualmente el orden y el control del flujo de trabajo.
+Aunque inicialmente evaluamos **GitLab Flow** como alternativa, descubrimos que seguía acarreando una complejidad similar a la de GitFlow para la escala de nuestro proyecto. Por ello, consolidamos la transición hacia GitHub Flow: un enfoque que mantiene una única rama permanente (`main`) siempre en estado desplegable, de la cual se derivan ramas de vida corta para cada *feature* o *fix* que se integran mediante Pull Requests. Esto elimina la necesidad de mantener una rama de desarrollo (`develop`), reduciendo pasos intermedios sin perder el orden ni el control del flujo de trabajo.
 
 Además, al **gestionar los ambientes mediante pipelines** en lugar de asociarlos a ramas específicas, ganamos flexibilidad para promover el código entre entornos sin depender de la estructura de ramificación, lo que se adapta mejor a la naturaleza ágil y acotada del proyecto.
 

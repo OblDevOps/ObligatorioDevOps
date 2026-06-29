@@ -385,6 +385,38 @@ El pipeline de DB no incluye análisis de código estático ni SonarCloud, ya qu
 
 ---
 
+### Arquitectura de observabilidad
+
+La observabilidad del sistema se centraliza en **Amazon CloudWatch** y cubre tres flujos: logs, métricas y auto-scaling reactivo. No se implementa trazado distribuido en producción (el soporte OpenTelemetry de catalog está deshabilitado al no configurarse `OTEL_SERVICE_NAME` en el entorno).
+
+```mermaid
+flowchart TB
+    subgraph CLUSTER["ECS Cluster — Fargate"]
+        TASKS["Microservicios\nui · admin · catalog · cart\ncheckout · orders · postgres · redis"]
+    end
+
+    NAT["NAT Gateway"]
+
+    subgraph CW["Amazon CloudWatch"]
+        CW_LOGS["Logs\n/ecs/{env}/{servicio}\nretención 7 días"]
+        CW_MET["Metrics — ECS/ContainerInsights\nCPU · Memoria · RunningTaskCount"]
+        CW_DASH["Dashboard\nretailstore-{env}\nCPU · Memoria · Tareas corriendo · Alarmas"]
+        CW_AL["Alarmas\nui sin tareas corriendo\nui CPU > 80% por 10 min"]
+    end
+
+    ASG["Application Auto Scaling"]
+
+    TASKS -->|"awslogs driver\nvía NAT Gateway"| NAT
+    NAT --> CW_LOGS
+    TASKS -->|"Container Insights\ndirecto — sin NAT Gateway"| CW_MET
+    CW_MET --> CW_DASH
+    CW_MET --> CW_AL
+    CW_MET -->|"CPU target 70%"| ASG
+    ASG -->|"escala entre 1 y 3 tareas"| TASKS
+```
+
+---
+
 ### Decisiones de arquitectura
 
 #### Diagrama de arquitectura general

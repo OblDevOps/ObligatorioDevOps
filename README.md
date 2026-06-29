@@ -13,7 +13,7 @@
 
 ### Observación
 
-En esta entrega surgió un imprevisto: el equipo encontró un error no reproducible durante el inicio del sistema al levantar los microservicios. En un principio, estos funcionan correctamente en el ambiente de desarrollo, pero al levantar los demás entornos, algunos microservicios dejan de funcionar. Tras investigar el comportamiento, descubrimos que podría existir un límite en la cantidad de contenedores o en la memoria disponible, lo que provoca que ciertos microservicios no se ejecuten o se detengan inesperadamente cuando se inician otros nuevos.
+Esta entrega se realizó sobre la rama fix/test. Una vez finalizado el trabajo principal, el equipo intentó continuar implementando nuevas funcionalidades, lo que generó múltiples problemas no reproducibles al momento de realizar los despliegues. Ante esto, se tomó la decisión de mantener el registro de dicho avance en otra sección, dejando main como muestra del último estado de desarrollo y utilizando fix/test como la versión estable para la entrega.
 
 ## Pre-requisitos
 

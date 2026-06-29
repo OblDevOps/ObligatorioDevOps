@@ -53,7 +53,7 @@ resource "aws_security_group" "task" {
 }
 
 resource "aws_ecs_task_definition" "main" {
-  family                   = var.service_name
+  family                   = "${var.environment}-${var.service_name}"
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
   cpu                      = var.cpu

@@ -36,7 +36,7 @@ resource "aws_cloudwatch_log_group" "redis" {
 }
 
 resource "aws_ecs_task_definition" "redis" {
-  family                   = "redis"
+  family                   = "${var.environment}-redis"
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
   cpu                      = var.cpu
